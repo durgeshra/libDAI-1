@@ -25,6 +25,10 @@ void DecMAP::setProperties( const PropertySet &opts ) {
         props.verbose = opts.getStringAs<size_t>("verbose");
     else
         props.verbose = 0;
+    if( opts.hasKey("maxtime") )
+        props.maxtime = opts.getStringAs<Real>("maxtime");
+    else
+        props.maxtime = 10000;
     if( opts.hasKey("reinit") )
         props.reinit = opts.getStringAs<bool>("reinit");
     else
@@ -38,6 +42,7 @@ PropertySet DecMAP::getProperties() const {
     opts.set( "reinit", props.reinit );
     opts.set( "ianame", props.ianame );
     opts.set( "iaopts", props.iaopts );
+    opts.set( "maxtime", props.maxtime );
     return opts;
 }
 
@@ -49,6 +54,7 @@ string DecMAP::printProperties() const {
     s << "reinit=" << props.reinit << ",";
     s << "ianame=" << props.ianame << ",";
     s << "iaopts=" << props.iaopts << "]";
+    s << "maxtime=" << props.maxtime << "]";
     return s.str();
 }
 
@@ -94,6 +100,8 @@ Real DecMAP::run() {
     if( props.verbose >= 2 )
         cerr << endl;
 
+    double tic = toc();
+
     // the variables which have not been clamped yet
     SmallSet<size_t> freeVars;
     for( size_t i = 0; i < nrVars(); i++ )
@@ -103,7 +111,7 @@ Real DecMAP::run() {
     InfAlg *clamped = newInfAlg( props.ianame, fg(), props.iaopts );
 
     // decimate until no free variables remain
-    while( freeVars.size() ) {
+    while( freeVars.size() && (toc()-tic)<props.maxtime ) {
         Real md = clamped->run();
         if( md > _maxdiff )
             _maxdiff = md;

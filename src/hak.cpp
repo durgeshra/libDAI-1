@@ -349,7 +349,7 @@ Real HAK::doGBP() {
     // do several passes over the network until maximum number of iterations has
     // been reached or until the maximum belief difference is smaller than tolerance
     Real maxDiff = INFINITY;
-    for( _iters = 0; _iters < props.maxiter && maxDiff > props.tol; _iters++ ) {
+    for( _iters = 0; _iters < props.maxiter && maxDiff > props.tol && (toc()-tic)<props.maxtime; _iters++ ) {
         for( size_t beta = 0; beta < nrIRs(); beta++ ) {
             bforeach( const Neighbor &alpha, nbIR(beta) ) {
                 size_t _beta = alpha.dual;

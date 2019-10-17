@@ -193,9 +193,12 @@ Real TreeEP::run() {
 
     vector<Factor> oldBeliefs = beliefs();
 
+
     // do several passes over the network until maximum number of iterations has
     // been reached or until the maximum belief difference is smaller than tolerance
     Real maxDiff = INFINITY;
+    Real prevLogZ = nan("1");
+    Real logz;
     for( _iters = 0; _iters < props.maxiter && maxDiff > props.tol && (toc() - tic) < props.maxtime; _iters++ ) {
         for( size_t I = 0; I < nrFactors(); I++ )
             if( offtree(I) ) {
@@ -213,10 +216,18 @@ Real TreeEP::run() {
 
         if( props.verbose >= 3 )
             cerr << name() << "::run:  maxdiff " << maxDiff << " after " << _iters+1 << " passes" << endl;
+        logz = logZ();
+        if(isnan(logz)){
+            cout << prevLogZ;
+            return maxDiff;
+        }
+        prevLogZ = logz;
     }
 
     if( maxDiff > _maxdiff )
         _maxdiff = maxDiff;
+
+    cout << logz;
 
     if( props.verbose >= 1 ) {
         if( maxDiff > props.tol ) {

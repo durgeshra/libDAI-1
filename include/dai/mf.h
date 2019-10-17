@@ -58,6 +58,9 @@ class MF : public DAIAlgFG {
             /// Maximum number of iterations
             size_t maxiter;
 
+            /// Maximum time
+            size_t maxtime;
+
             /// Tolerance for convergence test
             Real tol;
 
@@ -103,6 +106,7 @@ class MF : public DAIAlgFG {
         virtual Real maxDiff() const { return _maxdiff; }
         virtual size_t Iterations() const { return _iters; }
         virtual void setMaxIter( size_t maxiter ) { props.maxiter = maxiter; }
+        virtual void setMaxTime( double maxtime ) { props.maxtime = maxtime; }
         virtual void setProperties( const PropertySet &opts );
         virtual PropertySet getProperties() const;
         virtual std::string printProperties() const;

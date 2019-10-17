@@ -346,8 +346,7 @@ Real BP::run() {
                 cerr << name() << "::run:  ";
                 cerr << "converged in " << _iters << " passes (" << toc() - tic << " seconds)." << endl;
         }
-    }
-
+    }        
     return maxDiff;
 }
 

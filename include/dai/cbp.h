@@ -87,6 +87,7 @@ class CBP : public DAIAlgFG {
         virtual Real maxDiff() const { return _maxdiff; }
         virtual size_t Iterations() const { return _iters; }
         virtual void setMaxIter( size_t maxiter ) { props.maxiter = maxiter; }
+        virtual void setMaxTime( double maxtime ) { props.maxtime = maxtime; }
         virtual void setProperties( const PropertySet &opts ) { props.set( opts ); }
         virtual PropertySet getProperties() const { return props.get(); }
         virtual std::string printProperties() const { return props.toString(); }
@@ -114,7 +115,8 @@ class CBP : public DAIAlgFG {
             UpdateType updates;
             /// Maximum number of iterations for BP
             size_t maxiter;
-
+            /// Maximum time for BP
+            double maxtime;
             /// Tolerance used for controlling recursion depth (\a recurse is REC_LOGZ or REC_BDIFF)
             Real rec_tol;
             /// Maximum number of levels of recursion (\a recurse is REC_FIXED)
@@ -158,6 +160,8 @@ class CBP : public DAIAlgFG {
             UpdateType updates;
             /// Maximum number of iterations for BP
             size_t maxiter;
+            /// Maximum time for BP
+            double maxtime;
             /// Tolerance used for controlling recursion depth (\a recurse is REC_LOGZ or REC_BDIFF)
             Real rec_tol;
             /// Maximum number of levels of recursion (\a recurse is REC_FIXED)

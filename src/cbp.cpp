@@ -26,6 +26,8 @@ namespace dai {
 using namespace std;
 using boost::shared_ptr;
 
+double startTime;
+
 
 /// Given a sorted vector of states \a xis and total state count \a n_states, return a vector of states not in \a xis
 vector<size_t> complement( vector<size_t> &xis, size_t n_states ) {
@@ -129,6 +131,8 @@ Real CBP::run() {
     if( seed > 0 )
         rnd_seed( seed );
 
+    startTime = toc();
+
     InfAlg *bp = getInfAlg();
     bp->init();
     bp->run();
@@ -151,6 +155,7 @@ InfAlg* CBP::getInfAlg() {
     bpProps.set("updates", props.updates);
     bpProps.set("tol", props.tol);
     bpProps.set("maxiter", props.maxiter);
+    bpProps.set("maxtime", props.maxtime);
     bpProps.set("verbose", props.verbose);
     bpProps.set("logdomain", false);
     bpProps.set("damping", (Real)0.0);
@@ -175,7 +180,7 @@ void CBP::runRecurse( InfAlg *bp, Real orig_logZ, vector<size_t> clamped_vars_li
     else
         found = chooseNextClampVar( bp, clamped_vars_list, i, xis, &maxVar );
 
-    if( !found ) {
+    if( !found || (toc()-startTime)>=props.maxtime ) {
         num_leaves++;
         sum_level += clamped_vars_list.size();
         beliefs_out = bp->beliefs();
@@ -237,11 +242,11 @@ void CBP::runRecurse( InfAlg *bp, Real orig_logZ, vector<size_t> clamped_vars_li
     Real p = unSoftMax( lz, cmp_lz );
     Real bp__d = 0.0;
 
-    if( props.recursion == Properties::RecurseType::REC_BDIFF && props.rec_tol > 0 ) {
+    if(( props.recursion == Properties::RecurseType::REC_BDIFF && props.rec_tol > 0 ) || (toc()-startTime)>=props.maxtime ) {
         vector<Factor> combined_b( mixBeliefs( p, b, cmp_b ) );
         Real new_lz = logSumExp( lz,cmp_lz );
         bp__d = dist( bp->beliefs(), combined_b, nrVars() );
-        if( exp( new_lz - orig_logZ) * bp__d < props.rec_tol ) {
+        if(( exp( new_lz - orig_logZ) * bp__d < props.rec_tol ) || (toc()-startTime)>=props.maxtime ) {
             num_leaves++;
             sum_level += clamped_vars_list.size();
             beliefs_out = combined_b;
@@ -524,6 +529,7 @@ void CBP::Properties::set(const PropertySet &opts)
         if( *i == "tol" ) continue;
         if( *i == "updates" ) continue;
         if( *i == "maxiter" ) continue;
+        if( *i == "maxtime" ) continue;
         if( *i == "rec_tol" ) continue;
         if( *i == "max_levels" ) continue;
         if( *i == "min_max_adj" ) continue;
@@ -544,6 +550,8 @@ void CBP::Properties::set(const PropertySet &opts)
         errormsg = errormsg + "CBP: Missing property \"updates\" for method \"CBP\"\n";
     if( !opts.hasKey("maxiter") )
         errormsg = errormsg + "CBP: Missing property \"maxiter\" for method \"CBP\"\n";
+    if( !opts.hasKey("maxtime") )
+        errormsg = errormsg + "CBP: Missing property \"maxtime\" for method \"CBP\"\n";
     if( !opts.hasKey("rec_tol") )
         errormsg = errormsg + "CBP: Missing property \"rec_tol\" for method \"CBP\"\n";
     if( !opts.hasKey("min_max_adj") )
@@ -568,6 +576,7 @@ void CBP::Properties::set(const PropertySet &opts)
     tol = opts.getStringAs<Real>("tol");
     updates = opts.getStringAs<UpdateType>("updates");
     maxiter = opts.getStringAs<size_t>("maxiter");
+    maxtime = opts.getStringAs<double>("maxtime");
     rec_tol = opts.getStringAs<Real>("rec_tol");
     if( opts.hasKey("max_levels") ) {
         max_levels = opts.getStringAs<size_t>("max_levels");
@@ -597,6 +606,7 @@ PropertySet CBP::Properties::get() const {
     opts.set("tol", tol);
     opts.set("updates", updates);
     opts.set("maxiter", maxiter);
+    opts.set("maxtime", maxtime);
     opts.set("rec_tol", rec_tol);
     opts.set("max_levels", max_levels);
     opts.set("min_max_adj", min_max_adj);
@@ -616,6 +626,7 @@ string CBP::Properties::toString() const {
     s << "tol=" << tol << ",";
     s << "updates=" << updates << ",";
     s << "maxiter=" << maxiter << ",";
+    s << "maxtime=" << maxtime << ",";
     s << "rec_tol=" << rec_tol << ",";
     s << "max_levels=" << max_levels << ",";
     s << "min_max_adj=" << min_max_adj << ",";

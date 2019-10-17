@@ -34,6 +34,10 @@ void MF::setProperties( const PropertySet &opts ) {
         props.damping = opts.getStringAs<Real>("damping");
     else
         props.damping = 0.0;
+    if( opts.hasKey("maxtime") )
+        props.maxtime = opts.getStringAs<double>("maxtime");
+    else
+        props.maxtime = INFINITY;
     if( opts.hasKey("init") )
         props.init = opts.getStringAs<Properties::InitType>("init");
     else
@@ -49,6 +53,7 @@ PropertySet MF::getProperties() const {
     PropertySet opts;
     opts.set( "tol", props.tol );
     opts.set( "maxiter", props.maxiter );
+    opts.set( "maxtime", props.maxtime );
     opts.set( "verbose", props.verbose );
     opts.set( "damping", props.damping );
     opts.set( "init", props.init );
@@ -62,6 +67,7 @@ string MF::printProperties() const {
     s << "[";
     s << "tol=" << props.tol << ",";
     s << "maxiter=" << props.maxiter << ",";
+    s << "maxtime=" << props.maxtime << ",";
     s << "verbose=" << props.verbose << ",";
     s << "init=" << props.init << ",";
     s << "updates=" << props.updates << ",";
@@ -124,7 +130,7 @@ Real MF::run() {
     // do several passes over the network until maximum number of iterations has
     // been reached or until the maximum belief difference is smaller than tolerance
     Real maxDiff = INFINITY;
-    for( _iters = 0; _iters < props.maxiter && maxDiff > props.tol; _iters++ ) {
+    for( _iters = 0; _iters < props.maxiter && maxDiff > props.tol && (toc()-tic)<props.maxtime; _iters++ ) {
         random_shuffle( update_seq.begin(), update_seq.end(), rnd );
 
         maxDiff = -INFINITY;
@@ -161,7 +167,6 @@ Real MF::run() {
             cerr << "converged in " << _iters << " passes (" << toc() - tic << " seconds)." << endl;
         }
     }
-
     return maxDiff;
 }
 

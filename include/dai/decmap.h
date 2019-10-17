@@ -45,6 +45,8 @@ class DecMAP : public DAIAlgFG {
             /// Complete or partial reinitialization of clamped subgraphs?
             bool reinit;
 
+            Real maxtime;
+
             /// Name of the algorithm used to calculate the beliefs on clamped subgraphs
             std::string ianame;
 
